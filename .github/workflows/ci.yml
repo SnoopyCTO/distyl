@@ -24,6 +24,19 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      # The windows-latest image ships Visual Studio 18 (VS 2026). node-gyp
+      # only learned to parse that version string in 12.0.0, and Node 20
+      # bundles 10.1.0, so @vscode/sqlite3 cannot compile from source without
+      # a newer node-gyp. Pointing npm at a current one keeps this working as
+      # future VS releases land, which pinning an older runner image would not.
+      - name: Use a node-gyp that recognizes Visual Studio 2026
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          npm install -g node-gyp@latest
+          npm config set node_gyp "$(npm root -g)/node-gyp/bin/node-gyp.js"
+          node-gyp --version
+
       - run: npm install
 
       - run: npm run check-types
